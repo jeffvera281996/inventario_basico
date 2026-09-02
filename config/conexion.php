@@ -2,7 +2,7 @@
 $host      = "localhost";
 $usuario   = "root";
 $clave     = "";
-$basedatos = "integradora";
+$basedatos = "inventario";
 
 $conexion = new mysqli($host, $usuario, $clave, $basedatos);
 
