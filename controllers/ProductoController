@@ -1,0 +1,76 @@
+<?php
+require_once __DIR__ . '/../models/Producto.php';
+
+class ProductoController
+{
+    private $modelo;
+
+    public function __construct()
+    {
+        $this->modelo = new Producto();
+    }
+
+    // Muestra el formulario de registro
+    public function mostrarFormulario()
+    {
+        $mensaje = "";
+        require __DIR__ . '/../views/productos/crear.php';
+    }
+
+    // Procesa el formulario (validación en servidor + INSERT)
+    public function guardar()
+    {
+        $mensaje = "";
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombre      = trim($_POST['nombre'] ?? '');
+            $categoria   = trim($_POST['categoria'] ?? '');
+            $precio      = trim($_POST['precio'] ?? '');
+            $cantidad    = trim($_POST['cantidad'] ?? '');
+            $descripcion = trim($_POST['descripcion'] ?? '');
+
+            if ($nombre === '' || $categoria === '' || $precio === '' || $cantidad === '') {
+                $mensaje = "Todos los campos obligatorios deben completarse.";
+            } elseif (strlen($nombre) > 100 || strlen($categoria) > 50) {
+                $mensaje = "El nombre o la categoría exceden la longitud permitida.";
+            } elseif (!is_numeric($precio) || (float)$precio <= 0) {
+                $mensaje = "El precio debe ser un número mayor a 0.";
+            } elseif (!ctype_digit($cantidad) || (int)$cantidad <= 0) {
+                $mensaje = "La cantidad debe ser un número entero mayor a 0.";
+            } else {
+                $insertado = $this->modelo->insertar(
+                    $nombre,
+                    $categoria,
+                    (float)$precio,
+                    (int)$cantidad,
+                    $descripcion
+                );
+
+                if ($insertado) {
+                    header("Location: index.php?action=listar&mensaje=ok");
+                    exit;
+                }
+                $mensaje = "Ocurrió un error al guardar el producto.";
+            }
+        }
+
+        require __DIR__ . '/../views/productos/crear.php';
+    }
+
+    // Lista todos los productos
+    public function listar()
+    {
+        $productos = $this->modelo->obtenerTodos();
+        require __DIR__ . '/../views/productos/listar.php';
+    }
+
+    // Elimina un producto (opcional)
+    public function eliminar()
+    {
+        if (isset($_GET['id'])) {
+            $this->modelo->eliminar((int)$_GET['id']);
+        }
+        header("Location: index.php?action=listar");
+        exit;
+    }
+}
